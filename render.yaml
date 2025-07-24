@@ -1,10 +1,31 @@
+# render.yaml
+# Bu fayl Render-də iki xidməti (backend və frontend) deploy etmək üçün istifadə olunur.
+
 services:
   - type: web
-    name: aion-fastapi
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python main.py"
-    plan: free
-build:
-  environment:
-    pythonVersion: 3.11
+    name: aion-file-backend # Backend xidmətinin adı
+    env: python # Python mühitini istifadə et
+    buildCommand: "./build.sh" # Xüsusi build skriptini işə sal (dependencies və spaCy modeli üçün)
+    startCommand: "python3 main.py" # FastAPI tətbiqini başlat
+    healthCheckPath: / # Sağlamlıq yoxlaması üçün endpoint
+    autoDeploy: true # Git push zamanı avtomatik deploy et
+    plan: starter # Render planı (starter pulsuz plan üçün)
+    rootDir: ai-service # FastAPI kodunuzun yerləşdiyi qovluq
+    envVars:
+      - key: PORT
+        value: 8000 # FastAPI-nin işləyəcəyi port
+
+  - type: web
+    name: aion-file-frontend # Frontend xidmətinin adı
+    env: node # Node.js mühitini istifadə et
+    buildCommand: "npm install && npm run build" # Node.js asılılıqlarını quraşdır və build et
+    startCommand: "npm start" # Next.js tətbiqini başlat
+    healthCheckPath: / # Sağlamlıq yoxlaması üçün endpoint
+    autoDeploy: true # Git push zamanı avtomatik deploy et
+    plan: starter # Render planı
+    rootDir: aion-file-project # Next.js kodunuzun yerləşdiyi qovluq
+    envVars:
+      - key: PORT
+        value: 3000 # Next.js-in işləyəcəyi port
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: https://aion-file-backend.onrender.com # Buranı öz backend xidmətinizin Render URL-i ilə əvəz edin!
